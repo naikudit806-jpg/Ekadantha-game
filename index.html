@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>EKADANTHA — Rise of the Remover | Mythological Action-Adventure</title>
+  <meta name="description" content="An original mythological action-adventure inspired by the spirit of Ganesh Chaturthi. Control Lord Ganesha, overcome obstacles, and vanquish the Vighnas.">
+  <meta name="theme-color" content="#d97706">
+  
+  <!-- Google Fonts: Cinzel & Outfit for authentic mythological & modern aesthetic -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/hud.css">
+  <link rel="stylesheet" href="css/cinematic.css">
+</head>
+<body>
+  <div id="game-container">
+    <!-- Main Game Canvas -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- Visual FX Overlay (Vignette, divine flashes, shockwaves) -->
+    <div id="fx-overlay"></div>
+
+    <!-- Opening Cinematic Overlay -->
+    <div id="cinematic-screen" class="screen active">
+      <video id="cinematic-video" playsinline preload="auto" muted></video>
+      <canvas id="cinematic-canvas"></canvas>
+      <div class="cinematic-letterbox top"></div>
+      <div class="cinematic-letterbox bottom"></div>
+      <div class="cinematic-content">
+        <div id="cinematic-subtitle" class="cinematic-subtitle"></div>
+        <div class="cinematic-controls">
+          <button id="btn-skip-cinematic" class="btn btn-secondary">
+            <span class="icon">⏭</span> Skip Cinematic
+          </button>
+          <button id="btn-cinematic-audio" class="btn btn-icon">
+            <span id="cinematic-audio-icon">🔊</span>
+          </button>
+        </div>
+      </div>
+      <div id="cinematic-title-card" class="cinematic-title-card hidden">
+        <div class="title-om">ॐ गं गणपतये नमः</div>
+        <h1 class="title-main">EKADANTHA</h1>
+        <h2 class="title-sub">RISE OF THE REMOVER</h2>
+        <button id="btn-begin-journey" class="btn btn-gold btn-large pulsate">
+          ENTER THE SANCTUM
+        </button>
+      </div>
+    </div>
+
+    <!-- Active Gameplay Screen Layer -->
+    <div id="game-screen" class="screen hidden" style="pointer-events:none;"></div>
+
+    <!-- Main Menu Screen -->
+    <div id="menu-screen" class="screen hidden">
+      <div class="menu-background-effects">
+        <div class="diya-glow left"></div>
+        <div class="diya-glow right"></div>
+      </div>
+      <div class="menu-content">
+        <div class="menu-header">
+          <div class="sacred-symbol">ॐ</div>
+          <h1 class="game-logo">EKADANTHA</h1>
+          <p class="game-tagline">RISE OF THE REMOVER</p>
+          <p class="festival-badge">🌸 Special Ganesh Chaturthi Edition 🌸</p>
+        </div>
+
+        <div class="menu-actions">
+          <button id="btn-play" class="btn btn-gold btn-large">
+            <span class="btn-icon">⚔️</span> PLAY CAMPAIGN
+          </button>
+          <button id="btn-continue" class="btn btn-secondary btn-large">
+            <span class="btn-icon">📜</span> CONTINUE (<span id="menu-chapter-progress">Ch. 1-1</span>)
+          </button>
+          <div class="menu-row">
+            <button id="btn-chapters" class="btn btn-glass">
+              <span class="btn-icon">🗺️</span> CHAPTERS
+            </button>
+            <button id="btn-powers" class="btn btn-glass">
+              <span class="btn-icon">✨</span> POWERS
+            </button>
+            <button id="btn-shop" class="btn btn-glass">
+              <span class="btn-icon">🪙</span> UPGRADES
+            </button>
+          </div>
+          <div class="menu-row">
+            <button id="btn-settings" class="btn btn-glass">
+              <span class="btn-icon">⚙️</span> SETTINGS
+            </button>
+            <button id="btn-lore" class="btn btn-glass">
+              <span class="btn-icon">📖</span> STORY & LORE
+            </button>
+            <button id="btn-replay-cinematic" class="btn btn-glass">
+              <span class="btn-icon">🎬</span> INTRO
+            </button>
+          </div>
+        </div>
+
+        <div class="menu-footer">
+          <div class="currency-chip">
+            <span class="modak-icon">🟡</span>
+            <span id="menu-coin-count">0</span> Modak Coins
+          </div>
+          <div class="quote-container">
+            <span id="menu-quote">"Every obstacle has a path through it."</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chapter & Level Select Screen -->
+    <div id="chapter-screen" class="screen modal hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>Select Chapter & Level</h2>
+          <button class="btn-close" data-close="chapter-screen">✕</button>
+        </div>
+        <div class="chapter-tabs" id="chapter-tabs">
+          <!-- Populated dynamically: Ch 1 to Ch 5 -->
+        </div>
+        <div class="chapter-details">
+          <div id="chapter-banner" class="chapter-banner">
+            <h3 id="current-chapter-title">Chapter 1: The Awakening</h3>
+            <p id="current-chapter-desc">Ancient Ganapati Temple — The first Vighnas manifest around the sacred sanctum.</p>
+          </div>
+          <div class="level-grid" id="level-grid">
+            <!-- 3 levels per chapter populated dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Powers Screen -->
+    <div id="powers-screen" class="screen modal hidden">
+      <div class="modal-card modal-large">
+        <div class="modal-header">
+          <h2>Divine Powers of Ekadanta</h2>
+          <button class="btn-close" data-close="powers-screen">✕</button>
+        </div>
+        <div class="powers-container" id="powers-container">
+          <!-- 6 powers dynamically populated -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Upgrade Shop Screen -->
+    <div id="shop-screen" class="screen modal hidden">
+      <div class="modal-card modal-large">
+        <div class="modal-header">
+          <h2>Sacred Mandapam — Upgrades</h2>
+          <div class="currency-chip header-currency">
+            <span class="modak-icon">🟡</span>
+            <span id="shop-coin-count">0</span> Coins
+          </div>
+          <button class="btn-close" data-close="shop-screen">✕</button>
+        </div>
+        <div class="shop-grid" id="shop-grid">
+          <!-- Attack, Defense, Health, Speed, Power, Ultimate upgrade cards -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Screen -->
+    <div id="settings-screen" class="screen modal hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>Settings & Controls</h2>
+          <button class="btn-close" data-close="settings-screen">✕</button>
+        </div>
+        <div class="settings-body">
+          <div class="setting-item">
+            <label>Master Volume</label>
+            <input type="range" id="slider-volume" min="0" max="100" value="80">
+          </div>
+          <div class="setting-item">
+            <label>Festival Music (Web Audio Ragas)</label>
+            <input type="checkbox" id="check-music" checked>
+          </div>
+          <div class="setting-item">
+            <label>Sound Effects & Divine Impact</label>
+            <input type="checkbox" id="check-sfx" checked>
+          </div>
+          <div class="setting-item">
+            <label>Visual Quality</label>
+            <select id="select-quality">
+              <option value="high" selected>High (Atmospheric particles, bloom & godrays)</option>
+              <option value="medium">Medium (Standard particles & lighting)</option>
+              <option value="low">Low (Maximum performance / battery saver)</option>
+            </select>
+          </div>
+          <div class="setting-item">
+            <label>Screen Shake Intensity</label>
+            <input type="range" id="slider-shake" min="0" max="100" value="75">
+          </div>
+          <div class="setting-divider"></div>
+          <div class="controls-guide">
+            <h4>Controls Reference</h4>
+            <div class="guide-grid">
+              <div><kbd>A</kbd> / <kbd>D</kbd> or <kbd>←</kbd> / <kbd>→</kbd>: Move</div>
+              <div><kbd>W</kbd> / <kbd>Space</kbd>: Jump</div>
+              <div><kbd>J</kbd>: Light Divine Attack</div>
+              <div><kbd>K</kbd>: Heavy Parashu Smash</div>
+              <div><kbd>L</kbd>: Dodge Roll / Invincible Dash</div>
+              <div><kbd>1</kbd>–<kbd>6</kbd>: Cast Divine Powers</div>
+              <div><kbd>ESC</kbd> / <kbd>P</kbd>: Pause Game</div>
+            </div>
+          </div>
+          <div class="setting-divider"></div>
+          <div class="setting-item danger-zone">
+            <button id="btn-reset-data" class="btn btn-danger">Reset All Game Progress</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lore & Story Screen -->
+    <div id="lore-screen" class="screen modal hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>Mythological Lore & Story</h2>
+          <button class="btn-close" data-close="lore-screen">✕</button>
+        </div>
+        <div class="lore-body">
+          <div class="lore-article">
+            <h3>The Mythos of Ekadanta</h3>
+            <p>Lord Ganesha, revered as <em>Vighnaharta</em> (Remover of Obstacles) and <em>Ekadanta</em> (He of the Single Sacred Tusk), embodies wisdom, auspicious beginnings, and the strength to turn adversity into spiritual victory.</p>
+          </div>
+          <div class="lore-article">
+            <h3>The Vighnas</h3>
+            <p>The Vighnas are supernatural manifestations of fear, doubt, arrogance, and discord. They thrive in stagnation and attempt to block festive celebrations and human endeavors. With divine grace, Ekadanta clears the path for light, harmony, and joy.</p>
+          </div>
+          <div class="lore-article">
+            <h3>The Sacred Five Chapters</h3>
+            <p>From the awakening in the ancient sanctum, through the mystical durva forests, the radiant streets of pandals, the fortress of doubts, and culminating at the sacred riverside Visarjan at sunset, every level reflects a step toward ultimate triumph.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- In-Game HUD -->
+    <div id="hud-container" class="hud-container hidden">
+      <!-- Top Left: Player Status -->
+      <div class="hud-top-left">
+        <div class="player-avatar-badge">
+          <div class="avatar-ring">
+            <span class="sacred-icon">🐘</span>
+          </div>
+          <div class="bars-stack">
+            <div class="hud-label-row">
+              <span class="player-name">EKADANTA</span>
+              <span id="player-hp-text" class="player-hp-val">100 / 100</span>
+            </div>
+            <div class="health-bar-bg">
+              <div id="player-health-fill" class="health-bar-fill"></div>
+              <div id="player-shield-fill" class="shield-bar-fill"></div>
+            </div>
+            <!-- Ultimate / Prana Meter -->
+            <div class="ultimate-bar-bg">
+              <div id="player-prana-fill" class="ultimate-bar-fill"></div>
+              <span class="prana-label">PRANA POWER</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Center: Objective & Chapter Info -->
+      <div class="hud-top-center">
+        <div class="level-indicator">
+          <span id="hud-level-tag">CH 1-1: TEMPLE SANCTUM</span>
+        </div>
+        <div class="objective-card">
+          <span class="obj-icon">🎯</span>
+          <span id="hud-objective-text">Defeat all Vighnas to purify the sanctum</span>
+          <span id="hud-objective-count" class="obj-count">(0 / 5)</span>
+        </div>
+      </div>
+
+      <!-- Top Right: Coins, Combo, Pause -->
+      <div class="hud-top-right">
+        <div class="hud-coin-pill">
+          <span class="modak-icon">🟡</span>
+          <span id="hud-coin-count">0</span>
+        </div>
+        <button id="btn-hud-pause" class="btn-icon-pause" title="Pause Game">⏸</button>
+      </div>
+
+      <!-- Combo Counter Overlay -->
+      <div id="combo-hud" class="combo-hud hidden">
+        <div id="combo-num" class="combo-num">3x</div>
+        <div class="combo-title">DIVINE HIT COMBO</div>
+        <div class="combo-timer-bar">
+          <div id="combo-timer-fill" class="combo-timer-fill"></div>
+        </div>
+      </div>
+
+      <!-- Boss Health Bar -->
+      <div id="boss-hud" class="boss-hud hidden">
+        <div class="boss-title-row">
+          <span class="boss-skull">💀</span>
+          <span id="boss-name" class="boss-name">DHARANI VIGHNA</span>
+          <span id="boss-phase-tag" class="boss-phase-tag">PHASE 1</span>
+        </div>
+        <div class="boss-hp-bar-bg">
+          <div id="boss-hp-fill" class="boss-hp-fill"></div>
+        </div>
+      </div>
+
+      <!-- Bottom Center: Active Divine Powers Bar -->
+      <div class="hud-bottom-center">
+        <div class="powers-dock" id="powers-dock">
+          <!-- 6 slots populated dynamically with hotkey, cooldown overlay -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Touch Controls Cluster -->
+    <div id="mobile-controls" class="mobile-controls hidden">
+      <!-- Left: Dynamic Virtual Joystick Zone -->
+      <div id="joystick-zone" class="joystick-zone">
+        <div id="joystick-base" class="joystick-base">
+          <div id="joystick-thumb" class="joystick-thumb"></div>
+        </div>
+      </div>
+
+      <!-- Right: Action Buttons Cluster -->
+      <div class="actions-cluster">
+        <div class="action-btn-row">
+          <button id="btn-touch-power" class="touch-btn power-quick-btn">
+            <span class="t-icon">✨</span>
+            <span class="t-label">POWER</span>
+          </button>
+          <button id="btn-touch-ultimate" class="touch-btn ult-btn">
+            <span class="t-icon">🔱</span>
+            <span class="t-label">ULT</span>
+          </button>
+        </div>
+        <div class="action-btn-row">
+          <button id="btn-touch-jump" class="touch-btn jump-btn">
+            <span class="t-icon">⬆️</span>
+            <span class="t-label">JUMP</span>
+          </button>
+          <button id="btn-touch-dodge" class="touch-btn dodge-btn">
+            <span class="t-icon">💨</span>
+            <span class="t-label">DODGE</span>
+          </button>
+        </div>
+        <div class="action-btn-row main-combat">
+          <button id="btn-touch-attack" class="touch-btn attack-btn">
+            <span class="t-icon">⚔️</span>
+            <span class="t-label">ATTACK</span>
+          </button>
+          <button id="btn-touch-heavy" class="touch-btn heavy-btn">
+            <span class="t-icon">💥</span>
+            <span class="t-label">HEAVY</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Narrative / Dialogue Box -->
+    <div id="dialogue-box" class="dialogue-box hidden">
+      <div class="dialogue-avatar-frame">
+        <div id="dialogue-avatar" class="dialogue-avatar">🐘</div>
+      </div>
+      <div class="dialogue-body">
+        <div id="dialogue-speaker" class="dialogue-speaker">LORD EKADANTA</div>
+        <div id="dialogue-text" class="dialogue-text">Fear not the obstacle. The path opens to those of steady faith.</div>
+        <div class="dialogue-prompt">Press [SPACE] / Tap to continue ▸</div>
+      </div>
+    </div>
+
+    <!-- Pause Menu Modal -->
+    <div id="pause-screen" class="screen modal hidden">
+      <div class="modal-card pause-card">
+        <h2>GAME PAUSED</h2>
+        <div class="pause-actions">
+          <button id="btn-resume" class="btn btn-gold btn-large">Resume Game</button>
+          <button id="btn-restart-level" class="btn btn-secondary">Restart Level</button>
+          <button id="btn-pause-settings" class="btn btn-glass">Audio & Settings</button>
+          <button id="btn-pause-quit" class="btn btn-danger">Exit to Main Menu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Level Victory Screen -->
+    <div id="victory-screen" class="screen modal hidden">
+      <div class="modal-card victory-card">
+        <div class="victory-header">
+          <div class="victory-mandala">🌸</div>
+          <h2>OBSTACLE CLEARED!</h2>
+          <h3 id="victory-level-title">Temple Sanctum Purified</h3>
+        </div>
+        <div class="victory-stats">
+          <div class="stat-box">
+            <span class="stat-label">Enemies Banished</span>
+            <span id="vic-enemies-count" class="stat-value">12</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Max Combo</span>
+            <span id="vic-max-combo" class="stat-value">18x</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Modak Coins Earned</span>
+            <span id="vic-coins-earned" class="stat-value">+150 🟡</span>
+          </div>
+        </div>
+        <div id="victory-unlock-banner" class="unlock-banner hidden">
+          <span class="unlock-star">✨</span>
+          <span id="victory-unlock-text">NEW POWER UNLOCKED: VAKRATUNDA SWEEP!</span>
+        </div>
+        <div class="victory-actions">
+          <button id="btn-vic-next" class="btn btn-gold btn-large">Next Level ▸</button>
+          <button id="btn-vic-shop" class="btn btn-secondary">Visit Upgrades 🪙</button>
+          <button id="btn-vic-menu" class="btn btn-glass">Chapter Menu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Defeat / Tactical Retreat Screen -->
+    <div id="defeat-screen" class="screen modal hidden">
+      <div class="modal-card defeat-card">
+        <div class="defeat-header">
+          <div class="defeat-lotus">🪷</div>
+          <h2>INNER MEDITATION</h2>
+          <p class="defeat-sub">"When the obstacle stands tall, gather your strength and rise once more."</p>
+        </div>
+        <div class="defeat-actions">
+          <button id="btn-defeat-retry" class="btn btn-gold btn-large">Rise and Overcome ⚔️</button>
+          <button id="btn-defeat-shop" class="btn btn-secondary">Upgrade Powers in Shop 🪙</button>
+          <button id="btn-defeat-menu" class="btn btn-glass">Return to Menu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Final Ending Celebration Screen (Grand Visarjan Victory) -->
+    <div id="ending-screen" class="screen modal hidden">
+      <div class="modal-card ending-card">
+        <div class="ending-header">
+          <div class="divine-sun">☀️</div>
+          <h1 class="ending-shloka">वक्रतुण्ड महाकाय सूर्यकोटि समप्रभ।</h1>
+          <h2 class="ending-shloka-sub">निर्विघ्नं कुरु मे देव सर्वकार्येषु सर्वदा॥</h2>
+          <h1 class="ending-title">GANPATI BAPPA MORYA!</h1>
+          <p class="ending-quote">
+            "All darkness has dissolved. The sacred rivers gleam with thousands of diyas, and the world rejoices in harmony, courage, and auspicious beginnings."
+          </p>
+        </div>
+        <div class="ending-celebration-canvas-container">
+          <canvas id="ending-fireworks-canvas"></canvas>
+        </div>
+        <div class="ending-actions">
+          <button id="btn-ending-continue" class="btn btn-gold btn-large">Replay Chapters & Level Select</button>
+          <button id="btn-ending-menu" class="btn btn-secondary">Main Menu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts: Modular Architecture -->
+  <script src="js/engine/storage.js"></script>
+  <script src="js/audio/sound_engine.js"></script>
+  <script src="js/engine/input.js"></script>
+  <script src="js/engine/particles.js"></script>
+  <script src="js/engine/physics.js"></script>
+  <script src="js/engine/renderer.js"></script>
+  <script src="js/gameplay/dialogue.js"></script>
+  <script src="js/gameplay/powers.js"></script>
+  <script src="js/gameplay/combat.js"></script>
+  <script src="js/gameplay/enemies.js"></script>
+  <script src="js/gameplay/bosses.js"></script>
+  <script src="js/gameplay/player.js"></script>
+  <script src="js/gameplay/levels.js"></script>
+  <script src="js/gameplay/cinematic.js"></script>
+  <script src="js/ui/shop.js"></script>
+  <script src="js/ui/ui_manager.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
